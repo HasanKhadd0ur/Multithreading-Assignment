@@ -11,8 +11,8 @@ import java.io.IOException;
 
 public class Main {
 
-    public static final String SOURCE_FILE = "C:\\Users\\HASAN\\Desktop\\Multithreading-Assignment\\src\\main\\java\\multithreading\\imageProcessing\\resources\\many-flowers.jpg";
-    public static final String DESTINATION_FILE = "C:\\Users\\HASAN\\Desktop\\Multithreading-Assignment\\src\\main\\java\\multithreading\\imageProcessing\\resources\\many-flowers-out.jpg";
+    public static final String SOURCE_FILE = "C:\\Users\\HASAN\\Desktop\\Multithreading-Assignment\\src\\main\\resources\\many-flowers.jpg";
+    public static final String DESTINATION_FILE = "C:\\Users\\HASAN\\Desktop\\Multithreading-Assignment\\src\\main\\resources\\many-flowers-out.jpg";
 
     public static void main(String[] args) throws IOException {
 
@@ -22,7 +22,7 @@ public class Main {
 
         // this is for time monitoring
         long startTime, endTime;
-        int numberOfThreads =1;
+        int numberOfThreads =10;
 
         // read the input image and result image
         BufferedImage originalImage = ImageLoadingHelper.LoadImage(SOURCE_FILE);
@@ -34,8 +34,10 @@ public class Main {
         //define the threads manager
         ThreadsCoordinator threadsCoordinator = new ThreadsCoordinator(imageRecolorSVC,resultImage,numberOfThreads);
 
+
         // assign the works to the threads
-        threadsCoordinator.assignHorizontalSliceWork();
+        //threadsCoordinator.assignHorizontalSliceWork();
+        threadsCoordinator.assignBlockWork(100,100);
 
         // start the timer
         startTime = System.currentTimeMillis();
@@ -49,7 +51,7 @@ public class Main {
         // get time at the end
         endTime = System.currentTimeMillis();
 
-        System.out.println("Block-based Multi-thread Duration with " + numberOfThreads + " threads: " + (endTime - startTime) + "ms");
+        System.out.println("Horizontal-based Duration with " + numberOfThreads + " threads: " + (endTime - startTime) + "ms");
 
         // write the recoloring image result
         File outputFile = new File(DESTINATION_FILE);

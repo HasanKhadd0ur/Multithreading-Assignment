@@ -17,8 +17,9 @@ import java.util.List;
 public class ThreadsCoordinator {
 
     private ImageRecolorService imageRecolorService ;
-    private  BufferedImage resultImage;
+    private BufferedImage resultImage;
     private List<Thread> threads;
+    private List<ImageRecoloringWorker> workers;
     private int numberOfThreads;
 
 
@@ -27,6 +28,7 @@ public class ThreadsCoordinator {
         this.resultImage = resultImage;
         this.threads = new ArrayList<>();
         this.numberOfThreads=numberOfThreads;
+        this.workers=new ArrayList<>();
     }
 
     // This Function for divid the image into horizontal slices and assign each slice to a thread
@@ -36,60 +38,66 @@ public class ThreadsCoordinator {
         int width = imageRecolorService.getOriginalImage().getWidth();
         int height = imageRecolorService.getOriginalImage().getHeight() / numberOfThreads;
 
-        // Assign each horizontal slice to a thread
-        for(int i = 0; i < numberOfThreads ; i++) {
-
+        for (int i = 0; i < numberOfThreads; i++) {
             final int threadMultiplier = i;
 
-            // the thread take a worker that is responsible for recoloring a block
-            Thread thread = new Thread( new ImageRecoloringWorker(
+            workers.add(new ImageRecoloringWorker(
                     imageRecolorService,
                     resultImage,
                     0,
-                    height*threadMultiplier,
-                    width,
-                    height
+                    height * threadMultiplier,
+                    height,
+                    width
             ));
-
-            threads.add(thread);
         }
+
+
     }
 
     // This Function responsible for divide the image into blocks and assign each group of blocks to a thread
     public  void assignBlockWork(int blockWidth , int blockHeight){
-
         int width = imageRecolorService.getOriginalImage().getWidth();
         int height = imageRecolorService.getOriginalImage().getHeight();
 
-        // Iterate Over the image and divided it into blocks
-        for (int x = 0; x < width; x += blockWidth) {
-            for (int y = 0; y < height; y += blockHeight) {
+        int blocksX = (int) Math.ceil((double) width / blockWidth);
+        int blocksY = (int) Math.ceil((double) height / blockHeight);
 
-                // Calculate the width and height for the current block (to avoid non divisibility issues)
-                int currentBlockWidth = Math.min(blockWidth, width - x);
-                int currentBlockHeight = Math.min(blockHeight, height - y);
+        for (int blockX = 0; blockX < blocksX; blockX++) {
+            for (int blockY = 0; blockY < blocksY; blockY++) {
+                int startX = blockX * blockWidth;
+                int startY = blockY * blockHeight;
+                int currentBlockWidth = Math.min(blockWidth, width - startX);
+                int currentBlockHeight = Math.min(blockHeight, height - startY);
 
-                // the thread take a worker that is responsible for recoloring a block
-                Thread thread = new Thread(new ImageRecoloringWorker(
+                workers.add(new ImageRecoloringWorker(
                         imageRecolorService,
                         resultImage,
-                        x,
-                        y,
-                        currentBlockWidth,
-                        currentBlockHeight
+                        startX,
+                        startY,
+                        currentBlockHeight,
+                        currentBlockWidth
                 ));
-
-                // Add the thread to the list of threads
-                threads.add(thread);
             }
         }
+
     }
 
     // This Function responsible for start all threads
     public void startWork(){
+        for (int i = 0; i < workers.size(); i++) {
+            Thread thread = new Thread(workers.get(i));
+            threads.add(thread);
 
-        for (Thread thread : threads){
             thread.start();
+            // if all the threads are assigned
+            if (i >= numberOfThreads) {
+                try {
+                    // Distribute the works By Round Robin Algo.
+                    threads.get((i)% numberOfThreads).join();
+                } catch (InterruptedException e) {
+
+                }
+            }
         }
     }
 
@@ -97,16 +105,66 @@ public class ThreadsCoordinator {
     // this Function responsible for join all threads and return the result
     public BufferedImage getResult(){
 
-        for (Thread thread : threads){
+        waitForCompletion();
+        return  resultImage;
+
+    }
+
+    private void createWorkers(int blockWidth, int blockHeight) {
+
+
+        int width = imageRecolorService.getOriginalImage().getWidth();
+        int height = imageRecolorService.getOriginalImage().getHeight();
+
+        int blocksX = (int) Math.ceil((double) width / blockWidth);
+        int blocksY = (int) Math.ceil((double) height / blockHeight);
+
+        for (int blockX = 0; blockX < blocksX; blockX++) {
+            for (int blockY = 0; blockY < blocksY; blockY++) {
+                int startX = blockX * blockWidth;
+                int startY = blockY * blockHeight;
+                int currentBlockWidth = Math.min(blockWidth, width - startX);
+                int currentBlockHeight = Math.min(blockHeight, height - startY);
+
+                workers.add(new ImageRecoloringWorker(
+                        imageRecolorService,
+                        resultImage,
+                        startX,
+                        startY,
+                        currentBlockHeight,
+                        currentBlockWidth
+                ));
+            }
+        }
+
+    }
+
+    // Assign threads based on the workers created
+    private void assignThreads(List<ImageRecoloringWorker> workers) {
+        for (int i = 0; i < workers.size(); i++) {
+            Thread thread = new Thread(workers.get(i));
+            threads.add(thread);
+
+            thread.start();
+            // if all the threads are assigned
+            if (i >= numberOfThreads) {
+                try {
+                    // Wait for the oldest thread to finish before starting a new one
+                    threads.get(i - numberOfThreads).join();
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }
+    }
+
+    private void waitForCompletion() {
+        for (Thread thread : threads) {
             try {
                 thread.join();
             } catch (InterruptedException e) {
 
             }
-
         }
-
-        return  resultImage;
-
     }
 }

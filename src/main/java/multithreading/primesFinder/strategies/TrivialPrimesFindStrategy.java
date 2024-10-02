@@ -10,7 +10,7 @@ public class TrivialPrimesFindStrategy implements PrimesFindStrategy{
     @Override
     public List<Integer> findPrimes(int start, int end) {
         List<Integer> primes = new ArrayList<>();
-            for (int number = Math.max(2,start); number <= end; number++) {
+            for (int number = start; number <= end; number++) {
             if (isPrime(number)) {
                 primes.add(number);
             }
@@ -18,11 +18,11 @@ public class TrivialPrimesFindStrategy implements PrimesFindStrategy{
         return primes;
     }
 
-    private boolean isPrime(int number) {
+    public boolean isPrime(int number) {
         if (number <= 1) {
             return false;
         }
-        for (int i = 2; i <= Math.sqrt(number); i++) {
+        for (int i = 2; i * i <= number; i++) {
             if (number % i == 0) {
                 return false;
             }

@@ -7,14 +7,12 @@ import multithreading.imageProcessing.helpers.ImageLoadingHelper;
 import multithreading.imageProcessing.services.ImageRecolorService;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.mockito.Mockito;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import static javax.management.Query.times;
 import static org.junit.Assert.assertNotEquals;
-import static org.mockito.Mockito.verify;
 
 public class ImageServiceTest extends TestCase {
 

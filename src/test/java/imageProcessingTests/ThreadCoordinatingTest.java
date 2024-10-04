@@ -58,7 +58,7 @@ public class ThreadCoordinatingTest extends TestCase {
     public void testAssignBlockSliceWork() {
 
         // assign the works to the threads
-        threadsCoordinator.assignBlockWork(500,500);
+        threadsCoordinator.assignBlockWork(400,400);
 
         // start the timer
         startTime = System.currentTimeMillis();
@@ -79,7 +79,7 @@ public class ThreadCoordinatingTest extends TestCase {
     @Test
     public  void testHorizontalSlicingPerformance(){
         // threads number for Block Slicing
-        int[] threadCounts = {1, 2, 4, 16, 64,100};
+        int[] threadCounts = {1, 2, 4, 16,32, 64,100};
 
         for (int numberOfThreads : threadCounts) {
 
@@ -113,7 +113,7 @@ public class ThreadCoordinatingTest extends TestCase {
     public  void testBlockSlicingPerformance(){
 
         // threads number for Block Slicing
-        int[] threadCounts = {1, 2, 4, 16, 64,100};
+        int[] threadCounts = {1, 2, 4, 16,32, 64,100};
 
         for (int numberOfThreads : threadCounts) {
 
@@ -131,6 +131,39 @@ public class ThreadCoordinatingTest extends TestCase {
 
             // Get  that the result
             BufferedImage finalResult = threadsCoordinator.getResult();
+
+            long endTime = System.currentTimeMillis();
+
+            long duration = endTime - startTime;
+
+            // Print the performance results
+            System.out.println("Time taken with " + numberOfThreads + " threads: " + duration + " ms");
+
+            assertNotNull("The result image should not be null", finalResult);
+        }
+    }
+    @Test
+    public  void testBlockSlicingWithPoolPerformance(){
+
+        // threads number for Block Slicing
+        int[] threadCounts = {1, 2, 4, 16,32, 64,100};
+
+        for (int numberOfThreads : threadCounts) {
+
+            // Create the ThreadsCoordinator
+            ThreadsCoordinator threadsCoordinator = new ThreadsCoordinator(imageRecolorSVC, resultImage, numberOfThreads);
+
+            // Assign the work to the threads
+            threadsCoordinator.assignBlockWork(400,400);
+
+            // Start Thre Timer
+            long startTime = System.currentTimeMillis();
+
+            // Start the work
+            threadsCoordinator.startWorkWithThreadPool();
+
+            // Get  that the result
+            BufferedImage finalResult = threadsCoordinator.getResultImageWithThreadPool();
 
             long endTime = System.currentTimeMillis();
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The ThreadsCoordinator class is responsible for managing and coordinating multiple threads
@@ -21,8 +22,8 @@ public class ThreadsCoordinator {
     private ImageRecolorService imageRecolorService ;
     private BufferedImage resultImage;
     private List<Thread> threads;
-    private List<ImageRecoloringWorker> works;
-    private ExecutorService threadPool;
+    private List<ImageRecoloringWorker> workers;
+    private ExecutorService executorService;
     private int numberOfThreads;
 
 
@@ -31,8 +32,8 @@ public class ThreadsCoordinator {
         this.resultImage = resultImage;
         this.threads = new ArrayList<>();
         this.numberOfThreads=numberOfThreads;
-        this.works=new ArrayList<>();
-        this.threadPool = Executors.newFixedThreadPool(numberOfThreads);
+        this.workers =new ArrayList<>();
+        this.executorService = Executors.newFixedThreadPool(numberOfThreads);
     }
 
     // This Function for divid the image into horizontal slices and assign each slice to a thread
@@ -45,7 +46,7 @@ public class ThreadsCoordinator {
         for (int i = 0; i < numberOfThreads; i++) {
             final int threadMultiplier = i;
 
-            works.add(new ImageRecoloringWorker(
+            workers.add(new ImageRecoloringWorker(
                     imageRecolorService,
                     resultImage,
                     0,
@@ -73,7 +74,7 @@ public class ThreadsCoordinator {
                 int currentBlockWidth = Math.min(blockWidth, width - startX);
                 int currentBlockHeight = Math.min(blockHeight, height - startY);
 
-                works.add(new ImageRecoloringWorker(
+                workers.add(new ImageRecoloringWorker(
                         imageRecolorService,
                         resultImage,
                         startX,
@@ -88,8 +89,8 @@ public class ThreadsCoordinator {
 
     // This Function responsible for start all threads
     public void startWork(){
-        for (int i = 0; i < works.size(); i++) {
-            Thread thread = new Thread(works.get(i));
+        for (int i = 0; i < workers.size(); i++) {
+            Thread thread = new Thread(workers.get(i));
             threads.add(thread);
 
             thread.start();
@@ -130,7 +131,7 @@ public class ThreadsCoordinator {
                 int currentBlockWidth = Math.min(blockWidth, width - startX);
                 int currentBlockHeight = Math.min(blockHeight, height - startY);
 
-                works.add(new ImageRecoloringWorker(
+                workers.add(new ImageRecoloringWorker(
                         imageRecolorService,
                         resultImage,
                         startX,
@@ -143,6 +144,32 @@ public class ThreadsCoordinator {
 
     }
 
+
+    // Assign threads to Thread pool better based on the workers created to make the scheduling and execution
+    public void startWorkWithThreadPool() {
+        for (ImageRecoloringWorker worker : workers) {
+            executorService.execute(worker);
+        }
+    }
+
+    private void waitForCompletion() {
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+
+            }
+        }
+    }
+
+    public BufferedImage getResultImageWithThreadPool(){
+
+        executorService.shutdown();
+
+        while (!executorService.isTerminated()) {   }
+
+        return  resultImage;
+    }
     // Assign threads based on the workers created
     private void assignThreads(List<ImageRecoloringWorker> workers) {
         for (int i = 0; i < workers.size(); i++) {
@@ -162,13 +189,4 @@ public class ThreadsCoordinator {
         }
     }
 
-    private void waitForCompletion() {
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-
-            }
-        }
-    }
 }

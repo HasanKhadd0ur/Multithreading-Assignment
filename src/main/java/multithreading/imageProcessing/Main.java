@@ -37,13 +37,14 @@ public class Main {
 
         // assign the works to the threads
         //threadsCoordinator.assignHorizontalSliceWork();
-        threadsCoordinator.assignBlockWork(100,100);
+        threadsCoordinator.assignBlockWork(400,400);
 
         // start the timer
         startTime = System.currentTimeMillis();
 
         // start the work (running the threads)
-        threadsCoordinator.startWork();
+       threadsCoordinator.startWork();
+       // threadsCoordinator.startWorkWithThreadPool();
 
         // get the result (join the threads)
         threadsCoordinator.getResult();

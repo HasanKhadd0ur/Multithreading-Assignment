@@ -69,18 +69,43 @@ public class PrimeNumberServiceTest extends TestCase {
 
     @Test
     public void testPrimeService_PrimesCount() {
+
+        // define the intervals  to test
+        int[][] intervals = {
+                {2, 1000},      // small interval
+                {2, 10000},     // medium interval
+                {2, 100000},    // larger interval
+                {2, 1000000},   // largest interval
+        };
+
+        // define the expected prime counts for each interval
+        int[] expectedPrimeCounts = {
+                168,
+                1229,
+                9592,
+                78498,
+        };
+
+
         // loop over all of our strategies
         for (PrimesFindStrategy strategy : primesFindStrategies) {
 
             // create a prime numbers service
             primeNumberService = new PrimeNumberService(strategy);
 
+            // Loop over each interval
+            for (int i = 0; i < intervals.length; i++) {
+                int start = intervals[i][0];
+                int end = intervals[i][1];
 
-            // get the primes numbers in the 20 22 interval should be empty
-            List<Integer> primes = primeNumberService.findPrimes(2, 1000000);
+                // find primes in the given range
+                List<Integer> primes = primeNumberService.findPrimes(start, end);
 
-            // verify that the result is an empty list
-            assertEquals(78498, primes.size());
+                // verify that the number of primes matches the expected count number
+
+                assertEquals("failed for interval: " + start + " - " + end + " using strategy: " + strategy.getClass().getSimpleName(),
+                        expectedPrimeCounts[i], primes.size());
+            }
 
         }
     }

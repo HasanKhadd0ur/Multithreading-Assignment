@@ -32,7 +32,7 @@ public class ThreadsCoordinatorTest extends TestCase {
         threadsNumber = new int[] {1,2,4,8,16,64,100};
 
         // define the intervals for searching on primes
-        intervals = new int[] {1000,10000,10000,100000,1000000};
+        intervals = new int[] {1000,10000,400000,4000000};
 
         // setup out strategies
         primesFindStrategies = new ArrayList<>();
